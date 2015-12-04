@@ -1,6 +1,8 @@
 # coding=utf-8
 import constants
 from common import logs
+from db.models import AlertHistory
+from datetime import datetime
 
 
 class NotificationHandler(object):
@@ -82,6 +84,7 @@ class NotificationHandler(object):
                 self._update_normal_original(key, is_warn, count)
                 self._update_normal_previous(key, is_warn, count)
                 self._up_normal_notify(key, is_warn, count)
+                self._make_notification()
                 logs.manager(logs.INFO, '{0} - ConditionNew{1}'
                              .format(key.upper(), type_key.title()))
             # Scenarios - More Than Original
@@ -165,4 +168,10 @@ class NotificationHandler(object):
         self.error_previous[constants.USAGE_TYPE_KEY] = error
 
     def _make_notification(self):
-        pass
+        alert_history = AlertHistory(
+            '013001', constants.INFO,
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            constants.PENDING, 'TEST......', self._alert_rule.user_id
+        )
+        print(alert_history)

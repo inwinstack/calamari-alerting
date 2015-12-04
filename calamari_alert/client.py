@@ -15,14 +15,14 @@ try:
 except ImportError:
     import simplejson as json
 
-from api.v1 import UserManager, ClusterManager, SpaceManager, HealthManager
+from api.v1 import UserMixin, ClusterMixin, SpaceMixin, HealthMixin
 
 
 class HTTPClient(requests.Session,
-                 UserManager,
-                 ClusterManager,
-                 SpaceManager,
-                 HealthManager):
+                 UserMixin,
+                 ClusterMixin,
+                 SpaceMixin,
+                 HealthMixin):
 
     def __init__(self, **params):
         """

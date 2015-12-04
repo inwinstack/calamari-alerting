@@ -1,6 +1,6 @@
 
 
-class UserManager(object):
+class UserMixin(object):
 
     def user_info(self):
         url = self._url(1, 'user/me')
@@ -13,7 +13,7 @@ class UserManager(object):
         return body
 
 
-class ClusterManager(object):
+class ClusterMixin(object):
 
     def __init__(self):
 
@@ -50,7 +50,7 @@ class ClusterManager(object):
             self.name = body['name']
 
 
-class HealthManager(object):
+class HealthMixin(object):
 
     def health_counters(self, cluster_id):
         url = self._url(1, 'cluster/{0}/health_counters'.format(str(cluster_id)))
@@ -58,7 +58,7 @@ class HealthManager(object):
         return body if isinstance(body, dict) else None
 
 
-class SpaceManager(object):
+class SpaceMixin(object):
 
     def cluster_space(self, cluster_id):
         url = self._url(1, 'cluster/{0}/space'.format(str(cluster_id)))

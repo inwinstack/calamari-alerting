@@ -15,6 +15,9 @@ MON_TYPE_KEY = 'mon'
 PG_TYPE_KEY = 'pg'
 USAGE_TYPE_KEY = 'usage'
 
+PENDING = 'pending'
+RESOLVED = 'resolved'
+
 USAGE_KEYS = [
     'free_bytes',
     'used_bytes',

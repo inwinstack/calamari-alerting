@@ -75,12 +75,18 @@ class AlertHistory(Base):
     resolved = Column(DateTime)
     status = Column(String(20))
     event_message = Column(String(100))
+    user_id = Column(Integer)
 
-    def __init__(self, count, code, triggered):
-        self.count = count
+    def __init__(self, code, level, triggered, resolved, status, event_message, user_id):
         self.code = code
+        self.level = level
         self.triggered = triggered
+        self.resolved = resolved
+        self.status = status
+        self.event_message = event_message
+        self.user_id = user_id
 
     def __repr__(self):
-        return "AlertHistory('%s', '%s', '%s', '%s')" \
-               % (self.id, self.count, self.code, self.level)
+        return "AlertHistory('%s', '%s', '%s', '%s', '%s', '%s', '%s')" \
+               % (self.id, self.level, self.triggered, self.resolved,
+                  self.status, self.event_message, self.user_id)
