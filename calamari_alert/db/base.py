@@ -10,7 +10,7 @@ class SQLMapper(object):
     def __init__(self, connection, enable_echo):
         self.engine = create_engine(connection, echo=enable_echo)
 
-        # logs.manager(logs.INFO, 'SQL - Connected {0}'.format(connection))
+        logs.manager(logs.INFO, 'SQL - Connected {0}'.format(connection))
 
         if not database_exists(self.engine.url):
             create_database(self.engine.url)

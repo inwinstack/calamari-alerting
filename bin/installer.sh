@@ -25,6 +25,9 @@ sudo chown -R ${SERVICE}:${SERVICE} /var/lib/${SERVICE}
 sudo chown ${SERVICE}:${SERVICE} /etc/${SERVICE}
 done
 
+sudo apt-get update
+sudo apt-get install postgresql postgresql-contrib -y
+sudo apt-get install python-setuptools libpq-dev python-dev libmysqlclient-dev libxml2-dev libxslt1-dev -y
 function install_alert(){
     echo "Installing ...."
 }
