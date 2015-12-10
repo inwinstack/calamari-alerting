@@ -1,22 +1,131 @@
 # coding=utf-8
 import constants
 from common import logs
-from db.models import AlertHistory
-from datetime import datetime
+from db.models import AlertHistory, AlertCounter
 
 
 class NotificationHandler(object):
 
-    def __init__(self):
+    def __init__(self, sql, mail_client, to_account):
         self._alert_rule = None
-        self.warn_original = {key: 0 for key in constants.NOTIFICATION_TYPES}
-        self.error_original = {key: 0 for key in constants.NOTIFICATION_TYPES}
-        self.warn_previous = {key: 0 for key in constants.NOTIFICATION_TYPES}
-        self.error_previous = {key: 0 for key in constants.NOTIFICATION_TYPES}
-        self.warn_notify = {key: 0 for key in constants.NOTIFICATION_TYPES}
-        self.error_notify = {key: 0 for key in constants.NOTIFICATION_TYPES}
+        self._sql = sql
+        self._mail_client = mail_client
+        self._to_account = to_account
+        self._alert_counter = None
+        self.warn_original = self.error_original = None
+        self.warn_previous = self.error_previous = None
+        self.warn_notify = self.error_notify = None
+        self.warn_id = self.error_id = None
 
-    def _get_all_counter(self, counters, key):
+    def update(self, rule):
+        """
+        Update alert rule from client response
+        """
+        self._alert_rule = rule
+        self._get_alert_counter(rule.user_id)
+
+    def _get_alert_counter(self, user_id):
+        query = self._sql.query(AlertCounter, AlertCounter.user_id).filter_by(user_id=user_id).first()
+        if query is not None and user_id is not None:
+            self._alert_counter = query
+        elif query is None:
+            self._alert_counter = AlertCounter(user_id, constants.NOTIFICATION_TYPES)
+            self._sql.add(self._alert_counter)
+
+        self._set_alert_counter()
+
+    def _set_alert_counter(self):
+        for key in self._alert_counter.all_key():
+            var = 'self.{0}'.format(key)
+            exec("{0} = {1}".format(var, self._alert_counter.get(key)))
+
+    def update_alert_counter(self):
+        for key in self._alert_counter.all_key():
+            var = 'self._alert_counter.{0}'.format(key)
+            assign_var = None
+            exec("assign_var = {0}".format('self.{0}'.format(key)))
+            exec("{0} = {1}".format(var, '"{0}"'.format(assign_var)))
+
+        self._sql.add(self._alert_counter)
+
+    def checking_normal(self, health_counters):
+        """
+        Check {osd, mon, pg} alert condition
+        """
+        for key in constants.NOTIFICATION_TYPES:
+            if key is not constants.USAGE_TYPE_KEY:
+                okay, warn, error = self._all_counter(health_counters, key)
+                self._checking_normal_threshold(key, True, warn)
+                self._checking_normal_threshold(key, False, error)
+                # logs.manager(logs.INFO, '{0} - okay: {1}, warn: {2}, error: {3}'
+                #              .format(key.upper(), okay, warn, error))
+
+    def checking_usage(self, usage_space):
+        """
+        Check usage alert condition,
+        if more than the threshold will push some message
+        """
+        warn = self.warn_previous[constants.USAGE_TYPE_KEY]
+        error = self.error_previous[constants.USAGE_TYPE_KEY]
+        ration = self._usage_ratio(usage_space)
+        # Scenarios -  More Than Original
+        if ration >= self._alert_rule.usage_error and warn == 1:
+            self._update_usage_previous(warn=0, error=1)
+            self._make_notification(constants.USAGE_TYPE_KEY, ration, '02')
+        # Scenarios - New
+        elif self._alert_rule.usage_warning <= ration < self._alert_rule.usage_error and warn == 0:
+            self._update_usage_previous(warn=1, error=0)
+            self._make_notification(constants.USAGE_TYPE_KEY, ration, '01')
+        # Scenarios -  Now Fix
+        elif self._alert_rule.usage_warning > ration or (self._alert_rule.usage_error > ration and error == 1):
+            if self.warn_previous[constants.USAGE_TYPE_KEY] > 0 or self.error_previous[constants.USAGE_TYPE_KEY] > 0:
+                self._update_usage_previous(warn=0, error=0)
+                self._make_notification(constants.USAGE_TYPE_KEY, ration, '04')
+
+    def _checking_normal_threshold(self, key, is_warn, count):
+        """
+        Check {osd, mon, pg} alert threshold,
+        if event some scenarios will push message
+        """
+        new_notify_count = lambda x, y, z: x + (y - z)
+        original = self.warn_original[key] if is_warn else self.error_original[key]
+        previous = self.warn_previous[key] if is_warn else self.error_previous[key]
+        notify_count = self.warn_notify[key] if is_warn else self.error_notify[key]
+        message_type = constants.MESSAGE_WARN_KEY if is_warn else constants.MESSAGE_ERROR_KEY
+        threshold = self._alert_rule.get_thresholds(key + '_' + message_type)
+
+        # logs.manager(logs.INFO, '{} - {} - original:{}, previous:{}, threshold:{}'
+        #              .format(key.upper(), message_type.upper(), original, previous, threshold))
+
+        if count >= threshold:
+            # Scenarios - New
+            if original < threshold and original < count and previous < count:
+                self._update_normal_original(key, is_warn, count)
+                self._update_normal_previous(key, is_warn, count)
+                self._up_normal_notify(key, is_warn, count)
+                self._make_notification(key, message_type, level='01')
+            # Scenarios - More Than Original
+            elif threshold <= original < count and count > previous:
+                self._update_normal_original(key, is_warn, count)
+                self._update_normal_previous(key, is_warn, count)
+                self._up_normal_notify(key, is_warn, new_notify_count(notify_count, count, previous))
+                self._make_notification(key, message_type, level='02')
+            # Scenarios - Now Fix
+            elif count < original and count < previous:
+                self._update_normal_previous(key, is_warn, count)
+            # Scenarios - More Then Done
+            elif previous < count < original:
+                self._update_normal_previous(key, is_warn, count)
+                self._make_notification(key, message_type, level='03')
+        else:
+            # Scenarios - Done
+            if count < original and count < previous:
+                self._update_normal_original(key, is_warn, 0)
+                self._update_normal_previous(key, is_warn, 0)
+                self._up_normal_notify(key, is_warn, 0)
+                self._make_notification(key, message_type, level='04')
+
+    def _all_counter(self, counters, key):
         """
         get counter values - 0:okay, 1:warn, 2:critical(error)
         """
@@ -30,86 +139,8 @@ class NotificationHandler(object):
                 total = okay + warn + error
                 warn = (float(warn) / float(total)) * 100
                 error = (float(error) / float(total)) * 100
-                print(total, warn, error)
 
             return okay, int(warn), int(error)
-
-    def _get_usage_ratio(self, usage_space):
-        """
-        get space values - 0:free_bytes, 1:used_bytes, 2:capacity_bytes
-        """
-        if constants.SPACE_KEY in usage_space:
-            space = tuple()
-            for key in constants.USAGE_KEYS:
-                space += (usage_space[constants.SPACE_KEY][key],)
-
-            return (float(space[1]) / float(space[-1])) * 100
-
-    def update_rule(self, rule):
-        """
-        Update alert rule from client response
-        """
-        self._alert_rule = rule
-
-    def checking_normal(self, health_counters):
-        """
-        Check {osd, mon, pg} alert condition
-        """
-        for key in constants.NOTIFICATION_TYPES:
-            if key is not constants.USAGE_TYPE_KEY:
-                okay, warn, error = self._get_all_counter(health_counters, key)
-                self._checking_threshold(key, True, warn)
-                self._checking_threshold(key, False, error)
-                logs.manager(logs.INFO, '{0} - okay: {1}, warn: {2}, error: {3}'
-                             .format(key.upper(), okay, warn, error))
-
-    def _checking_threshold(self, key, is_warn, count):
-        """
-        Check {osd, mon, pg} alert threshold,
-        if event some scenarios will push message
-        """
-        new_notify_count = lambda x, y, z: x + (y - z)
-        original = self.warn_original[key] if is_warn else self.error_original[key]
-        previous = self.warn_previous[key] if is_warn else self.error_previous[key]
-        notify_count = self.warn_notify[key] if is_warn else self.error_notify[key]
-        type_key = 'warning' if is_warn else 'error'
-        threshold = self._alert_rule.get_thresholds(key + '_' + type_key)
-
-        logs.manager(logs.INFO, '{} - {} - original:{}, previous:{}, threshold:{}'
-                     .format(key.upper(), type_key.upper(), original, previous, threshold))
-
-        if count >= threshold:
-            # Scenarios - New
-            if original < threshold and original < count and previous < count:
-                self._update_normal_original(key, is_warn, count)
-                self._update_normal_previous(key, is_warn, count)
-                self._up_normal_notify(key, is_warn, count)
-                self._make_notification()
-                logs.manager(logs.INFO, '{0} - ConditionNew{1}'
-                             .format(key.upper(), type_key.title()))
-            # Scenarios - More Than Original
-            elif threshold <= original < count and count > previous:
-                self._update_normal_original(key, is_warn, count)
-                self._update_normal_previous(key, is_warn, count)
-                self._up_normal_notify(key, is_warn, new_notify_count(notify_count, count, previous))
-                logs.manager(logs.INFO, '{0} - Condition{1}MoreThanOriginal'
-                             .format(key.upper(), type_key.title()))
-            # Scenarios - Now Fix
-            elif count < original and count < previous:
-                self._update_normal_previous(key, is_warn, count)
-            # Scenarios - More Then Done
-            elif previous < count < original:
-                self._update_normal_previous(key, is_warn, count)
-                logs.manager(logs.INFO, '{0} - ConditionWarn{1}Then{1}'
-                             .format(key.upper(), type_key.title()))
-        else:
-            # Scenarios - Done
-            if count < original and count < previous:
-                self._update_normal_original(key, is_warn, 0)
-                self._update_normal_previous(key, is_warn, 0)
-                self._up_normal_notify(key, is_warn, 0)
-                logs.manager(logs.INFO, '{0} - Condition{1}Done'
-                             .format(key.upper(), type_key.title()))
 
     def _update_normal_previous(self, key, is_warn, count):
         """
@@ -138,27 +169,16 @@ class NotificationHandler(object):
         else:
             self.error_notify[key] = count
 
-    def checking_usage(self, usage_space):
+    def _usage_ratio(self, usage_space):
         """
-        Check usage alert condition,
-        if more than the threshold will push some message
+        get space values - 0:free_bytes, 1:used_bytes, 2:capacity_bytes
         """
-        ration = self._get_usage_ratio(usage_space)
-        logs.manager(logs.INFO, 'USAGE - ration: {0}'.format(ration))
+        if constants.SPACE_KEY in usage_space:
+            space = tuple()
+            for key in constants.USAGE_KEYS:
+                space += (usage_space[constants.SPACE_KEY][key],)
 
-        if self._alert_rule.usage_warning <= ration < self._alert_rule.usage_error:
-            self._update_usage_previous(warn=1, error=0)
-            logs.manager(logs.DEBUG, constants.USAGE_STATUS_MESSAGE['03']
-                         .format(self._alert_rule.usage_warning))
-
-        elif ration >= self._alert_rule.usage_error:
-            self._update_usage_previous(warn=0, error=1)
-            logs.manager(logs.DEBUG, constants.USAGE_STATUS_MESSAGE['02'])
-
-        else:
-            if self.warn_previous[constants.USAGE_TYPE_KEY] > 0 or self.error_previous[constants.USAGE_TYPE_KEY] > 0:
-                self._update_usage_previous(warn=0, error=0)
-                logs.manager(logs.DEBUG, constants.USAGE_STATUS_MESSAGE['04'])
+            return (float(space[1]) / float(space[-1])) * 100
 
     def _update_usage_previous(self, warn, error):
         """
@@ -167,11 +187,33 @@ class NotificationHandler(object):
         self.warn_previous[constants.USAGE_TYPE_KEY] = warn
         self.error_previous[constants.USAGE_TYPE_KEY] = error
 
-    def _make_notification(self):
-        alert_history = AlertHistory(
-            '013001', constants.INFO,
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            constants.PENDING, 'TEST......', self._alert_rule.user_id
-        )
-        print(alert_history)
+    def _make_notification(self, name_type, message_type, level):
+        if name_type == constants.USAGE_TYPE_KEY:
+            message = constants.ENGLISH_STATUS_MESSAGE[name_type][level]
+            if level == '01':
+                message = message.format(message_type)
+        else:
+            message = constants.ENGLISH_STATUS_MESSAGE[name_type][message_type][level]
+
+        logs.manager(logs.INFO, '{0} - {1}'.format(name_type.upper(), message))
+        self._mail_client.sent(self._to_account, message)
+
+        if level == '01':
+            alert_history = AlertHistory(self._alert_rule.user_id, constants.PENDING, message)
+            self._sql.add(alert_history)
+            alert_history.code = '%s1%03d' % (constants.HISTORY_CODE[name_type], alert_history.id)
+            self._sql.add(alert_history)
+
+            if message_type == constants.MESSAGE_WARN_KEY:
+                self.warn_id[name_type] = alert_history.id
+            else:
+                self.error_id[name_type] = alert_history.id
+        else:
+            id = self.warn_id[name_type] if message_type == constants.MESSAGE_WARN_KEY else self.error_id[name_type]
+            query = self._sql.query(AlertHistory, AlertHistory.user_id).filter_by(id=id)
+            alert_history = query.first()
+            alert_history.level = constants.HISTORY_LEVEL[level]
+            alert_history.event_message = message
+            alert_history.tag_resolved() if level == '04' else alert_history.tag_triggered()
+            alert_history.status = constants.RESOLVED if level == '04' else constants.PENDING
+            self._sql.add(alert_history)

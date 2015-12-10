@@ -96,9 +96,9 @@ class HTTPClient(requests.Session,
         except ConnectionError as error:
             self.log.error("{0} {1} - {2}"
                            .format(method, url, error.message))
-        else:
-            self.log.debug("{0} {1}"
-                           .format(method, url))
+        # else:
+        #     self.log.debug("{0} {1}"
+        #                    .format(method, url))
 
         body = None
         if resp is not None:

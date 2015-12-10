@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-
+from datetime import datetime
+import json
 
 Base = declarative_base()
 
@@ -27,16 +28,13 @@ class AlertRule(Base):
         self.update(data)
 
     def update(self, data):
-        all_keys = [
-            'user', 'osd_warning', 'osd_error', 'mon_warning', 'mon_error',
+        all_key = [
+            'user_id', 'osd_warning', 'osd_error', 'mon_warning', 'mon_error',
             'pg_warning', 'pg_error', 'usage_warning', 'usage_error', 'general_polling',
             'abnormal_state_polling', 'abnormal_server_state_polling', 'enable_email_notify'
         ]
-        for key in all_keys:
+        for key in all_key:
             var = 'self.{0}'.format(key)
-            if key is 'user':
-                var += '_id'
-
             if key is not 'enable_email_notify':
                 exec("{0} = {1}".format(var, int(data[key])))
             else:
@@ -48,45 +46,66 @@ class AlertRule(Base):
         exec("{0} = {1}".format('thresholds', var))
         return thresholds
 
-    def __repr__(self):
-        return "AlertRule('%s'," \
-               "'%s', '%s', " \
-               "'%s', '%s', " \
-               "'%s', '%s'," \
-               "'%s', '%s', " \
-               "'%s', '%s', " \
-               "'%s', '%s')" \
-               % (self.user_id,
-                  self.osd_warning, self.osd_error,
-                  self.mon_warning, self.mon_error,
-                  self.pg_warning, self.pg_error,
-                  self.usage_warning, self.usage_error,
-                  self.general_polling, self.abnormal_state_polling,
-                  self.abnormal_server_state_polling, self.enable_email_notify)
-
 
 class AlertHistory(Base):
     __tablename__ = 'alert_history'
 
     id = Column(Integer, primary_key=True)
+    count = Column(Integer)
     code = Column(String(100))
-    level = Column(String(10))
+    level = Column(Integer)
     triggered = Column(DateTime)
     resolved = Column(DateTime)
     status = Column(String(20))
     event_message = Column(String(100))
     user_id = Column(Integer)
 
-    def __init__(self, code, level, triggered, resolved, status, event_message, user_id):
-        self.code = code
-        self.level = level
-        self.triggered = triggered
-        self.resolved = resolved
+    def __init__(self, user_id, status, event_message):
+        self.code = '00000'
+        self.level = 4
+        self.triggered = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.resolved = None
         self.status = status
         self.event_message = event_message
         self.user_id = user_id
+        self.count = 0
 
-    def __repr__(self):
-        return "AlertHistory('%s', '%s', '%s', '%s', '%s', '%s', '%s')" \
-               % (self.id, self.level, self.triggered, self.resolved,
-                  self.status, self.event_message, self.user_id)
+    def tag_resolved(self):
+        self.resolved = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    def tag_triggered(self):
+        self.triggered = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+
+class AlertCounter(Base):
+    __tablename__ = 'alert_counter'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, unique=True)
+    warn_original = Column(String(200))
+    error_original = Column(String(200))
+    warn_previous = Column(String(200))
+    error_previous = Column(String(200))
+    warn_notify = Column(String(200))
+    error_notify = Column(String(200))
+    warn_id = Column(String(200))
+    error_id = Column(String(200))
+
+    def __init__(self, user_id, keys):
+        self.user_id = user_id
+
+        for key in self.all_key():
+            var = 'self.{0}'.format(key)
+            exec("{0} = {1}".format(var, '"{0}"'.format({key: 0 for key in keys})))
+
+    def get(self, key):
+        var = None
+        exec("var = self.{0}".format(key))
+        exec("self.count = {0}".format(var))
+        return self.count
+
+    def all_key(self):
+        return [
+            'warn_original', 'error_original', 'warn_previous', 'error_previous',
+            'warn_notify', 'error_notify', 'warn_id', 'error_id'
+        ]

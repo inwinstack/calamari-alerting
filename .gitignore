@@ -1,3 +1,16 @@
 .DS_Store
 .idea/
 .idea/*
+*.pyc
+.vagrant
+.tox
+webapp/content/
+*.log
+*.pyc
+env
+venv
+virtualenv
+.git
+build/
+dev/var/
+var/

@@ -28,9 +28,10 @@ database_opts = [
 ]
 
 email_opts = [
-    cfg.StrOpt('email_type', default='gmail'),
-    cfg.StrOpt('username', default='test'),
-    cfg.StrOpt('password', default='test')
+    cfg.StrOpt('address', default='smtp.gmail.com'),
+    cfg.StrOpt('port', default=587),
+    cfg.StrOpt('username', default='localhost'),
+    cfg.StrOpt('password', default='localhost')
 ]
 
 CONF.register_group(defaults_group)
@@ -45,6 +46,8 @@ CONF.register_opts(database_opts, database_group)
 CONF.register_group(email_group)
 CONF.register_opts(email_opts, email_group)
 
-CONFIG_FILE = '/Users/kairenbai/Desktop/Python/Projects/calamari_alert/etc/calamari_alert'
+# CONFIG_FILE = '/Users/kairenbai/Desktop/Python/Projects/calamari_alert/etc/calamari_alert'
+
+CONFIG_FILE = '/etc/calamari_alert'
 
 CONF(default_config_files=[CONFIG_FILE + '/calamari_alert.conf'])

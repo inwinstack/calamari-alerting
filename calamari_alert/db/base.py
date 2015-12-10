@@ -9,7 +9,8 @@ class SQLMapper(object):
 
     def __init__(self, connection, enable_echo):
         self.engine = create_engine(connection, echo=enable_echo)
-        logs.manager(logs.INFO, 'SQL - Connected {0}'.format(connection))
+
+        # logs.manager(logs.INFO, 'SQL - Connected {0}'.format(connection))
 
         if not database_exists(self.engine.url):
             create_database(self.engine.url)
@@ -25,20 +26,17 @@ class SQLMapper(object):
 
     def sync(self):
         models.Base.metadata.create_all(self.engine)
-        logs.manager(logs.INFO, 'SQL - Synced all table ....')
+        # logs.manager(logs.INFO, 'SQL - Synced all table ....')
 
     def add(self, model):
         self.session.add(model)
         self.session.commit()
-        logs.manager(logs.INFO, 'SQL - Add {0} to database'.format(model))
+        # logs.manager(logs.INFO, 'SQL - Add {0} to database'.format(model))
 
     def query(self, model_class, args):
         query = self.session.query(model_class).order_by(args)
-        logs.manager(logs.INFO, 'SQL - Query {0} with {1}'.format(model_class, args))
-        if query.count() == 0:
-            return None
-        else:
-            return query
+        # logs.manager(logs.INFO, 'SQL - Query {0} with {1}'.format(model_class, args))
+        return None if query.count() == 0 else query
 
 
 
