@@ -25,10 +25,11 @@ class NotificationHandler(object):
         self._get_alert_counter(rule.user_id)
 
     def _get_alert_counter(self, user_id):
-        query = self._sql.query(AlertCounter, AlertCounter.user_id).filter_by(user_id=user_id).first()
-        if query is not None and user_id is not None:
-            self._alert_counter = query
-        elif query is None:
+        try:
+            query = self._sql.query(AlertCounter, AlertCounter.user_id).filter_by(user_id=user_id).first()
+            if query:
+                self._alert_counter = query
+        except AttributeError:
             self._alert_counter = AlertCounter(user_id, constants.NOTIFICATION_TYPES)
             self._sql.add(self._alert_counter)
 

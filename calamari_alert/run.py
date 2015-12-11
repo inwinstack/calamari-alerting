@@ -58,14 +58,15 @@ def main():
 
 
 def get_last_rule(sql, rule, user_id):
-    alert_rule = sql.query(AlertRule, AlertRule.user_id).filter_by(user_id=user_id).first()
-    if alert_rule is not None and rule is not None:
-        alert_rule.update(rule)
-    elif alert_rule is None:
-        alert_rule = AlertRule(rule)
+    try:
+        query = sql.query(AlertRule, AlertRule.user_id).filter_by(user_id=user_id).first()
+        if query:
+            query.update(rule)
+    except AttributeError:
+        query = AlertRule(rule)
 
-    sql.add(alert_rule)
-    return alert_rule
+    sql.add(query)
+    return query
 
 
 if __name__ == "__main__":
