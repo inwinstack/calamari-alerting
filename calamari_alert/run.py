@@ -1,10 +1,10 @@
-from common import config
-from common import logs
-from db.base import SQLMapper
-from db.models import AlertRule
-from handler import NotificationHandler
-from client import HTTPClient
-from smtp import SMTPClient
+from calamari_alert.common import config
+from calamari_alert.common import logs
+from calamari_alert.db.base import SQLMapper
+from calamari_alert.db.models import AlertRule
+from calamari_alert.handler import NotificationHandler
+from calamari_alert.client import HTTPClient
+from calamari_alert.smtp import SMTPClient
 import time
 import traceback
 

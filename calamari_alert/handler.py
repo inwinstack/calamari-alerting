@@ -1,7 +1,7 @@
 # coding=utf-8
-import constants
-from common import logs
-from db.models import AlertHistory, AlertCounter
+from calamari_alert import constants
+from calamari_alert.common import logs
+from calamari_alert.db.models import AlertHistory, AlertCounter
 
 
 class NotificationHandler(object):

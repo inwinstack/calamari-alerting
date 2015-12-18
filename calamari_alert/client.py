@@ -1,6 +1,6 @@
 import six
-from common import exceptions
-from common import logs
+from calamari_alert.common import exceptions
+from calamari_alert.common import logs
 from requests.exceptions import ConnectionError
 import requests
 

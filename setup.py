@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-from setuptools import setup
+from setuptools import setup, find_packages
 import sys
 
 if sys.version_info <= (2, 5):
@@ -26,23 +24,16 @@ requirements = [
 setup(
     name='calamari-alert',
     version='0.1.0',
+    packages=find_packages(),
     description='Calamari Alert Service',
     author='Kyle Bai',
     author_email='kyle.b@inwinstack.com',
     url='http://www.inwinstack.com/',
     install_requires=requirements,
-    packages=['calamari_alert', 'calamari_alert.tests', 'calamari_alert.api',
-              'calamari_alert.common', 'calamari_alert.db'],
     license="MIT",
-    classifiers=["Development Status :: 5 - Production/Stable",
-                 "Intended Audience :: Developers",
-                 "License :: OSI Approved :: MIT License",
-                 "Operating System :: OS Independent",
-                 "Topic :: Internet",
-                 "Programming Language :: Python :: 2",
-                 "Programming Language :: Python :: 2.6",
-                 "Programming Language :: Python :: 2.7",
-                 "Programming Language :: Python :: 3",
-                 "Programming Language :: Python :: 3.3",
-                 "Programming Language :: Python :: 3.4"]
+    entry_points={
+        'console_scripts':[
+            'calamari-alert = calamari_alert.run:main',
+            ],
+    },
 )

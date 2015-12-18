@@ -1,5 +1,5 @@
 import smtplib
-from common import logs
+from calamari_alert.common import logs
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
