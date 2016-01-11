@@ -14,12 +14,10 @@ sudo useradd --home-dir "/var/lib/${SERVICE}" \
 ${SERVICE}
 
 # Create essential dirs
-
 sudo mkdir -p /var/log/${SERVICE}
 sudo mkdir -p /etc/${SERVICE}
 
 # Set ownership of the dirs
-
 sudo chown -R ${SERVICE}:${SERVICE} /var/log/${SERVICE}
 sudo chown -R ${SERVICE}:${SERVICE} /var/lib/${SERVICE}
 sudo chown ${SERVICE}:${SERVICE} /etc/${SERVICE}
