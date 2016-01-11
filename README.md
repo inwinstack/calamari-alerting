@@ -40,9 +40,10 @@ $ sudo useradd --home-dir "/var/lib/${SERVICE}" --create-home --system --shell /
 ```sh
 
 $ sudo mkdir -p /var/log/${SERVICE}
+$ sudo mkdir -p /var/run/${SERVICE}
 $ sudo mkdir -p /etc/${SERVICE}
 $ sudo chown -R ${SERVICE}:${SERVICE} /var/log/${SERVICE}
-$ sudo chown -R ${SERVICE}:${SERVICE} /var/lib/${SERVICE}
+$ sudo chown -R ${SERVICE}:${SERVICE} /var/run/${SERVICE}
 $ sudo chown -R ${SERVICE}:${SERVICE} /etc/${SERVICE}
 $ sudo cp -r etc/calamari/calamari-alert.conf /etc/calamari/
 ```
@@ -84,35 +85,20 @@ address = smtp.gmail.com
 port = 587
 username = localhost@gmail.com
 password = localhost
-
 ```
 
-新增 calamari-alert upstart 檔案```/etc/init/calamari-alert.conf```：
+複製目錄底下的```scripts/calamari-alert-service```到```/etc/init.d```底下：
 ```sh
-$ cat > /etc/init/calamari-alert.conf << EOF
-description "Ceph Calamari Alert"
-author "kyle Bai <kyle.b@inwinStack.com>"
-
-start on runlevel [2345]
-stop on runlevel [!2345]
-
-exec start-stop-daemon --start --chuid calamari \
---exec /usr/local/bin/calamari-alert
-EOF
+$ sudo cp -r scripts/calamari-alert-service /etc/init.d/
 ```
-
 完成 upstart 檔案建立後，使用update-rc.d指令設定開機啟動：
 ```sh
-$ sudo update-rc.d calamari-alert defaults
-```
-啟動服務：
-```sh
-sudo start calamari-alert
+$ sudo update-rc.d calamari-alert-service defaults
 ```
 
-使用 Debug 模式：
+啟動服務：
 ```sh
-$ sudo calamari-alert 
+sudo service calamari-alert-service start
 ```
 
 License
