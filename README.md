@@ -33,7 +33,7 @@ $ sudo -u postgres psql postgres
 $ \password postgres
 ```
 
-建立一個名稱為```calamari```的使用者：
+建立一個名稱為```calamari-alert```的使用者：
 ```sh
 $ SERVICE="calamari-alert"
 $ sudo useradd --home-dir "/var/lib/${SERVICE}" --create-home --system --shell /bin/false ${SERVICE}
@@ -64,7 +64,7 @@ debug = True
 # [%(asctime)s] - %(name)s - %(levelname)s - %(message)s
 log_format = %(asctime)s %(levelname)-5s [%(name)s] - "%(message)s"
 log_date_format = %Y-%m-%d %H:%M:%S
-log_dir = /var/log/calamari
+log_dir = /var/log/calamari-alert
 
 [calamari]
 ip = http://calamari.example.com
@@ -94,7 +94,7 @@ password = localhost
 $ sudo cp -r scripts/calamari-alert-service /etc/init.d/
 $ sudo chmod 775 /etc/init.d/calamari-alert-service
 ```
-完成 upstart 檔案建立後，使用update-rc.d指令設定開機啟動：
+完成檔案複製後，使用 update-rc.d 指令設定開機啟動：
 ```sh
 $ sudo update-rc.d calamari-alert-service defaults
 ```
