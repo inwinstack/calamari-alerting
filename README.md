@@ -19,10 +19,13 @@ $ cd calamari-alerting
 之後安裝相關環境套件：
 ```sh
 $ sudo apt-get update 
-$ sudo apt-get install postgresql postgresql-contrib python-setuptools libpq-dev python-dev libmysqlclient-dev libxml2-dev libxslt1-dev -y 
+$ sudo apt-get install postgresql-contrib python-setuptools libpq-dev python-dev libmysqlclient-dev libxml2-dev libxslt1-dev -y 
 ```
-> 若使用其他資料庫系統，請更換。
 
+安裝資料庫系統，這邊採用 Postgresql：(Option)
+```sh
+$ sudo apt-get install postgresql 
+```
 
 修改預設 User 密碼，這邊範例使用 Postgresql，若已有存在資料庫，則不用該步驟：(Option)
 ```sh
@@ -32,20 +35,19 @@ $ \password postgres
 
 建立一個名稱為```calamari```的使用者：
 ```sh
-$ SERVICE="calamari"
+$ SERVICE="calamari-alert"
 $ sudo useradd --home-dir "/var/lib/${SERVICE}" --create-home --system --shell /bin/false ${SERVICE}
 ```
 
 建立 log 與 conf 目錄，並複製 conf 檔案到 etc 底下：
 ```sh
-
 $ sudo mkdir -p /var/log/${SERVICE}
 $ sudo mkdir -p /var/run/${SERVICE}
 $ sudo mkdir -p /etc/${SERVICE}
 $ sudo chown -R ${SERVICE}:${SERVICE} /var/log/${SERVICE}
 $ sudo chown -R ${SERVICE}:${SERVICE} /var/run/${SERVICE}
 $ sudo chown -R ${SERVICE}:${SERVICE} /etc/${SERVICE}
-$ sudo cp -r etc/calamari/calamari-alert.conf /etc/calamari/
+$ sudo cp -r etc/calamari-alert/calamari-alert.conf /etc/${SERVICE}/
 ```
 
 安裝```calamari-alert```服務套件：
@@ -53,7 +55,7 @@ $ sudo cp -r etc/calamari/calamari-alert.conf /etc/calamari/
 $ sudo python setup.py install
 ```
 
-編輯```/etc/calamari/calamari-alert.conf```檔案，並修改一下：
+編輯```/etc/calamari-alert/calamari-alert.conf```檔案，並修改一下：
 ```sh
 [DEFAULT]
 debug = True
@@ -87,9 +89,10 @@ username = localhost@gmail.com
 password = localhost
 ```
 
-複製目錄底下的```scripts/calamari-alert-service```到```/etc/init.d```底下：
+複製```scripts/calamari-alert-service```到```/etc/init.d```底下：
 ```sh
 $ sudo cp -r scripts/calamari-alert-service /etc/init.d/
+$ sudo chmod 775 /etc/init.d/calamari-alert-service
 ```
 完成 upstart 檔案建立後，使用update-rc.d指令設定開機啟動：
 ```sh
@@ -98,7 +101,9 @@ $ sudo update-rc.d calamari-alert-service defaults
 
 啟動服務：
 ```sh
-sudo service calamari-alert-service start
+$ sudo service calamari-alert-service start
+
+
 ```
 
 License
