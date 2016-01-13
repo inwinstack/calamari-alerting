@@ -8,7 +8,7 @@ WARN = 3
 ERROR = 4
 
 log_file = config.CONF.DEFAULT.log_dir + '/calamari-alert.log'
-logger = logging.getLogger('calamari_alert')
+logger = logging.getLogger('calamari-alert')
 logger.setLevel(logging.DEBUG)
 file_stream = logging.FileHandler(log_file)
 file_stream.setLevel(logging.DEBUG)

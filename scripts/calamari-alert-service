@@ -16,14 +16,14 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="ceph"
-PROJECT_NAME=calamari
+PROJECT_NAME="calamari"
 NAME=${PROJECT_NAME}-alert
 DAEMON=/usr/local/bin/${NAME}
 DAEMON_ARGS="--options args"
-PIDFILE=/var/run/${PROJECT_NAME}/${NAME}.pid
-SCRIPTNAME=/etc/init.d/${NAME}
-SYSTEM_USER=${PROJECT_NAME}
-SYSTEM_GROUP=${PROJECT_NAME}
+PIDFILE=/var/run/${NAME}/${NAME}.pid
+SCRIPTNAME=/etc/init.d/${NAME}-service
+SYSTEM_USER=${NAME}
+SYSTEM_GROUP=${NAME}
 STARTDAEMON_CHUID="--chuid ${SYSTEM_USER}:${SYSTEM_GROUP}"
 
 # Read configuration variable file if it is present
@@ -35,7 +35,7 @@ STARTDAEMON_CHUID="--chuid ${SYSTEM_USER}:${SYSTEM_GROUP}"
 # Function that starts the daemon/service
 #
 do_start() {
-    if ls /var/run/${PROJECT_NAME} | grep -Fxq "${NAME}.pid"
+    if ls /var/run/${NAME} | grep -Fxq "${NAME}.pid"
     then
         log_daemon_msg "Already Starting $DESC" "${NAME} service ..."
     else
@@ -61,11 +61,11 @@ do_stop() {
 }
 
 #
-# Function that sends a SIGHUP to the daemon/service
+# Function run debug to the daemon/service
 #
 do_debug() {
-        start-stop-daemon --stop --signal 1 --quiet --make-pidfile --pidfile $PIDFILE --name $NAME
-        return 0
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON > /dev/null \
+        || return 1
 }
 
 case "$1" in
@@ -79,6 +79,13 @@ case "$1" in
   stop)
         log_daemon_msg "Stopping $DESC" "${NAME} service ..."
         do_stop
+        case "$?" in
+                0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+                2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        esac
+        ;;
+  systemd-start)
+        do_debug
         case "$?" in
                 0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
                 2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
@@ -103,7 +110,7 @@ case "$1" in
         esac
         ;;
   *)
-        echo "Usage: $SCRIPTNAME {start|stop|restart|debug}" >&2
+        echo "Usage: $SCRIPTNAME {start|stop|restart|systemd-start}" >&2
         exit 3
         ;;
 esac
