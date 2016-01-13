@@ -46,8 +46,9 @@ def main():
 
             handler.update(alert_rule)
             handler.checking_usage(space)
-            handler.checking_normal(counter)
-            handler.update_alert_counter()
+            if counter:
+                handler.checking_normal(counter)
+                handler.update_alert_counter()
 
             time.sleep(10)
     except Exception:
