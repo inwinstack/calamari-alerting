@@ -53,7 +53,7 @@ $ sudo cp -r etc/calamari/calamari-alert.conf /etc/calamari/
 $ sudo python setup.py install
 ```
 
-編輯```/ect/calamari/calamari-alert.conf```檔案，並修改一下：
+編輯```/etc/calamari/calamari-alert.conf```檔案，並修改一下：
 ```sh
 [DEFAULT]
 debug = True
