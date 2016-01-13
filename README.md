@@ -31,7 +31,17 @@ $ sudo apt-get install postgresql
 ```sh
 $ sudo -u postgres psql postgres
 $ \password postgres
+$ \q
 ```
+> 在執行上個步驟若出現”psql: could not connect to server: No such file or directory
+Is the server running locally and accepting
+connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5432"?
+
+> 可以執行以下步驟來解決，以 postgresql 9.3 為例：
+```sh
+$ LC_ALL=C sudo pg_createcluster 9.3 main ; sudo /etc/init.d/postgresql restart
+```
+
 
 建立一個名稱為```calamari-alert```的使用者：
 ```sh
@@ -59,9 +69,6 @@ $ sudo python setup.py install
 ```sh
 [DEFAULT]
 debug = True
-
-# Example :
-# [%(asctime)s] - %(name)s - %(levelname)s - %(message)s
 log_format = %(asctime)s %(levelname)-5s [%(name)s] - "%(message)s"
 log_date_format = %Y-%m-%d %H:%M:%S
 log_dir = /var/log/calamari-alert
@@ -73,13 +80,6 @@ username = test
 password = test
 
 [database]
-# This line must be changed to actually run the plugin.
-# Example:
-# MySQL: connection = mysql://root:calamari@192.168.99.100/calamari
-# Postgresql: connection = postgresql://postgres:calamari@192.168.99.100/calamari
-# Microsoft SQL Server: connection = mssql+pymssql://scott:tiger@hostname:port/calamari
-# Oracle: connection = oracle://scott:tiger@127.0.0.1:1521/calamari
-# SQLite: connection = sqlite:///calamari.db
 connection = postgresql://postgres:calamari@localhost/calamari
 
 [email]
@@ -102,9 +102,10 @@ $ sudo update-rc.d calamari-alert-service defaults
 啟動服務：
 ```sh
 $ sudo service calamari-alert-service start
-
-
+* Starting ceph calamari-alert service ...                                                                                [ OK ]
 ```
+> Debug 可以使用```sudo service calamari-alert-service systemd-start```。
+
 
 License
 -------

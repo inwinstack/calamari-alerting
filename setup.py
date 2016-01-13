@@ -23,7 +23,7 @@ requirements = [
 
 setup(
     name='calamari-alert',
-    version='0.1.0',
+    version='0.1.1',
     packages=find_packages(),
     description='Calamari Alert Service',
     author='Kyle Bai',
@@ -32,8 +32,8 @@ setup(
     install_requires=requirements,
     license="MIT",
     entry_points={
-        'console_scripts':[
+        'console_scripts': [
             'calamari-alert = calamari_alert.run:main',
-            ],
+        ],
     },
 )

@@ -46,8 +46,7 @@ CONF.register_opts(database_opts, database_group)
 CONF.register_group(email_group)
 CONF.register_opts(email_opts, email_group)
 
-#CONFIG_FILE = '/Users/kairenbai/Desktop/Python/Projects/calamari-alert/etc/calamari'
+# CONFIG_FILE = '/Users/kairenbai/Desktop/Python/Projects/calamari-alert/etc/calamari-alert'
 
-CONFIG_FILE = '/etc/calamari'
-
+CONFIG_FILE = '/etc/calamari-alert'
 CONF(default_config_files=[CONFIG_FILE + '/calamari-alert.conf'])
