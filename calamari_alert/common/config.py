@@ -17,7 +17,7 @@ defaults_opts = [
 ]
 
 calamari_opts = [
-    cfg.StrOpt('ip', default='localhost', help='Calamari Server ip address'),
+    cfg.StrOpt('url', default='localhost', help='Calamari Server ip address'),
     cfg.StrOpt('port', default='80', help='Calamari Server port'),
     cfg.StrOpt('username', default='admin'),
     cfg.StrOpt('password', default='admin')
@@ -30,6 +30,7 @@ database_opts = [
 email_opts = [
     cfg.StrOpt('address', default='smtp.gmail.com'),
     cfg.StrOpt('port', default=587),
+    cfg.StrOpt('mode', default='None'),
     cfg.StrOpt('username', default='localhost'),
     cfg.StrOpt('password', default='localhost')
 ]
@@ -45,8 +46,6 @@ CONF.register_opts(database_opts, database_group)
 
 CONF.register_group(email_group)
 CONF.register_opts(email_opts, email_group)
-
-# CONFIG_FILE = '/Users/kairenbai/Desktop/Python/Projects/calamari-alert/etc/calamari-alert'
 
 CONFIG_FILE = '/etc/calamari-alert'
 CONF(default_config_files=[CONFIG_FILE + '/calamari-alert.conf'])

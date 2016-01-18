@@ -8,9 +8,9 @@ from calamari_alert.smtp import SMTPClient
 import time
 import traceback
 
-calamari_ip = config.CONF.calamari.ip
+calamari_url = config.CONF.calamari.url
 calamari_port = config.CONF.calamari.port
-endpoint = calamari_ip + ':' + calamari_port + '/api/'
+endpoint = calamari_url + ':' + calamari_port + '/api/'
 
 username = config.CONF.calamari.username
 password = config.CONF.calamari.password
@@ -26,6 +26,8 @@ mail_port = config.CONF.email.port
 def main():
     try:
         mail_client = SMTPClient(mail_username, mail_password, mail_address, mail_port)
+        mail_client.set_mode(config.CONF.email.mode)
+
         sql_connect = SQLMapper(connection=connection, enable_echo=False)
         sql_connect.sync()
 
@@ -46,12 +48,11 @@ def main():
 
             handler.update(alert_rule)
             handler.checking_usage(space)
-            if counter:
-                handler.checking_normal(counter)
-                handler.update_alert_counter()
+            handler.checking_normal(counter)
+            handler.update_alert_counter()
 
-            time.sleep(10)
-    except Exception:
+            time.sleep(alert_rule.general_polling)
+    except:
         tb = traceback.format_exc()
         logs.manager(logs.ERROR, "SYSTEM - {0}".format(tb))
     finally:

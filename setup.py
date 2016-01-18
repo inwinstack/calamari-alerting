@@ -23,7 +23,7 @@ requirements = [
 
 setup(
     name='calamari-alert',
-    version='0.1.1',
+    version='0.1.2',
     packages=find_packages(),
     description='Calamari Alert Service',
     author='Kyle Bai',
