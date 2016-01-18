@@ -69,24 +69,31 @@ $ sudo python setup.py install
 ```sh
 [DEFAULT]
 debug = True
+
 log_format = %(asctime)s %(levelname)-5s [%(name)s] - "%(message)s"
 log_date_format = %Y-%m-%d %H:%M:%S
 log_dir = /var/log/calamari-alert
 
 [calamari]
-ip = http://calamari.example.com
+url = http://calamari.example.com
 port = 80
-username = test
-password = test
+username = example
+password = example
 
 [database]
-connection = postgresql://postgres:calamari@localhost/calamari
+# Example:
+# MySQL: connection = mysql://root:calamari@192.168.99.100/calamari
+# Postgresql: connection = postgresql://postgres:calamari@192.168.99.100/calamari
+connection = postgresql://postgres:calamari@192.168.99.100/calamari
 
 [email]
 address = smtp.gmail.com
 port = 587
-username = localhost@gmail.com
-password = localhost
+
+# The 'mode' is setting smtp security, Two options 'None' and 'TLS'
+mode = TLS
+username = example@gmail.com
+password = example
 ```
 
 複製```scripts/calamari-alert-service```到```/etc/init.d```底下：
@@ -105,7 +112,6 @@ $ sudo service calamari-alert-service start
 * Starting ceph calamari-alert service ...                                                                                [ OK ]
 ```
 > Debug 可以使用```sudo service calamari-alert-service systemd-start```。
-
 
 License
 -------
