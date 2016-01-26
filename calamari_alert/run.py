@@ -10,7 +10,22 @@ import traceback
 
 calamari_url = config.CONF.calamari.url
 calamari_port = config.CONF.calamari.port
-endpoint = calamari_url + ':' + calamari_port + '/api/'
+
+if 'https' in calamari_url and calamari_port == '80':
+    endpoint = calamari_url + '/api/'
+else:
+    endpoint = calamari_url + ':' + calamari_port + '/api/'
+
+ca_verify = config.CONF.ssl.verify
+ca_file_dir = config.CONF.ssl.ca_file_dir
+ca_files = config.CONF.ssl.ca_files.split(',')
+
+if len(ca_files) > 1:
+    for i in range(0, len(ca_files)):
+        if ca_files[i]:
+            ca_files[i] = "{0}/{1}".format(ca_file_dir, ca_files[i].strip())
+else:
+    ca_files = ca_file_dir + '/' + config.CONF.ssl.ca_files
 
 username = config.CONF.calamari.username
 password = config.CONF.calamari.password
@@ -31,7 +46,11 @@ def main():
         sql_connect = SQLMapper(connection=connection, enable_echo=False)
         sql_connect.sync()
 
-        client = HTTPClient(endpoint=endpoint, debug=False)
+        client = HTTPClient(
+            endpoint=endpoint,
+            ca_verify=ca_verify,
+            ca_files=ca_files
+        )
         client.login(username, password)
 
         client.cluster_list()
@@ -64,6 +83,8 @@ def get_last_rule(sql, rule, user_id):
         query = sql.query(AlertRule, AlertRule.user_id).filter_by(user_id=user_id).first()
         if query:
             query.update(rule)
+        else:
+            raise AttributeError
     except AttributeError:
         query = AlertRule(rule)
 

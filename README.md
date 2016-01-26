@@ -74,6 +74,11 @@ log_format = %(asctime)s %(levelname)-5s [%(name)s] - "%(message)s"
 log_date_format = %Y-%m-%d %H:%M:%S
 log_dir = /var/log/calamari-alert
 
+[ssl]
+verify = False
+ca_file_dir = /var/lib/calamari-alert/ssl
+ca_files = apache.crt, apache.key
+
 [calamari]
 url = http://calamari.example.com
 port = 80
@@ -84,7 +89,7 @@ password = example
 # Example:
 # MySQL: connection = mysql://root:calamari@192.168.99.100/calamari
 # Postgresql: connection = postgresql://postgres:calamari@192.168.99.100/calamari
-connection = postgresql://postgres:calamari@192.168.99.100/calamari
+connection = postgresql://calamari:27HbZwr*g@192.168.99.100/calamari
 
 [email]
 address = smtp.gmail.com
@@ -95,6 +100,8 @@ mode = TLS
 username = example@gmail.com
 password = example
 ```
+> 若使用```HTTPS```的話，請在```[ssl]```部分設定驗證的金鑰與目錄，或者透過設定```verify```來忽略驗證。
+
 
 複製```scripts/calamari-alert-service```到```/etc/init.d```底下：
 ```sh

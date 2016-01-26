@@ -32,12 +32,13 @@ class HTTPClient(requests.Session,
 
         self.params = params
         self.log = logs.logger
-
         self.log.debug("PARAMS - {0}".format(str(self.params)))
-
         self.token = None
+        self.ca_files = self.params['ca_files']
+        self.ca_verify = (self.params['ca_verify'] == 'True')
 
         self.endpoint = self.params['endpoint']
+
         if 'timeout' not in self.params:
             self.timeout = None
 
@@ -91,6 +92,8 @@ class HTTPClient(requests.Session,
             resp = self.http.request(
                 method,
                 self.endpoint + url,
+                verify=bool(self.ca_verify),
+                cert=self.ca_files,
                 **kwargs
             )
         except ConnectionError as error:

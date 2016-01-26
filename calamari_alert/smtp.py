@@ -12,7 +12,6 @@ class SMTPClient(object):
         self.password = password
         self.domain_name = domain_name
         self.port = port
-        print(self.user, self.password, self.domain_name, self.port)
 
     def set_mode(self, mode):
         self.mode = mode
