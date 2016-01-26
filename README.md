@@ -26,6 +26,7 @@ $ sudo apt-get install postgresql-contrib python-setuptools libpq-dev python-dev
 ```sh
 $ sudo apt-get install postgresql 
 ```
+> P.S 若與```Calamari-server```連接使用，請輸入```Calamari-server```的資料庫資訊。
 
 修改預設 User 密碼，這邊範例使用 Postgresql，若已有存在資料庫，則不用該步驟：(Option)
 ```sh
