@@ -86,14 +86,21 @@ class HTTPClient(requests.Session,
 
         del kwargs['body']
 
+        try:
+            if 'verify' not in kwargs:
+                kwargs['verify'] = bool(self.ca_verify)
+                if bool(self.ca_verify) and 'cert' not in kwargs:
+                    kwargs['cert'] = self.ca_files
+        except KeyError:
+            pass
+
+
         resp = None
 
         try:
             resp = self.http.request(
                 method,
                 self.endpoint + url,
-                verify=bool(self.ca_verify),
-                cert=self.ca_files,
                 **kwargs
             )
         except ConnectionError as error:
