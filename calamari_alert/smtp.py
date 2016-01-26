@@ -35,9 +35,9 @@ class SMTPClient(object):
             logs.manager(logs.INFO, "EMAIL - Successfully sent email")
             return True
         except smtplib.socket.gaierror:
-            logs.manager(logs.ERROR, "Couldn't contact the host")
+            logs.manager(logs.ERROR, "EMAIL - Couldn't contact the host")
         except smtplib.SMTPAuthenticationError:
-            logs.manager(logs.ERROR, "Login failed")
+            logs.manager(logs.ERROR, "EMAIL - Login failed")
         except Exception, msg:
-            logs.manager(logs.ERROR, msg.message)
+            logs.manager(logs.ERROR, "EMAIL - {0}".format(msg.message))
         return False
