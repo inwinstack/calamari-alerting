@@ -32,12 +32,13 @@ class HTTPClient(requests.Session,
 
         self.params = params
         self.log = logs.logger
-
         self.log.debug("PARAMS - {0}".format(str(self.params)))
-
         self.token = None
+        self.ca_files = self.params['ca_files']
+        self.ca_verify = (self.params['ca_verify'] == 'True')
 
         self.endpoint = self.params['endpoint']
+
         if 'timeout' not in self.params:
             self.timeout = None
 
@@ -84,6 +85,15 @@ class HTTPClient(requests.Session,
             pass
 
         del kwargs['body']
+
+        try:
+            if 'verify' not in kwargs:
+                kwargs['verify'] = bool(self.ca_verify)
+                if bool(self.ca_verify) and 'cert' not in kwargs:
+                    kwargs['cert'] = self.ca_files
+        except KeyError:
+            pass
+
 
         resp = None
 

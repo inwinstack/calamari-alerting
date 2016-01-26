@@ -29,6 +29,8 @@ class NotificationHandler(object):
             query = self._sql.query(AlertCounter, AlertCounter.user_id).filter_by(user_id=user_id).first()
             if query:
                 self._alert_counter = query
+            else:
+                raise AttributeError
         except AttributeError:
             self._alert_counter = AlertCounter(user_id, constants.NOTIFICATION_TYPES)
             self._sql.add(self._alert_counter)
@@ -68,6 +70,7 @@ class NotificationHandler(object):
         """
         warn = self.warn_previous[constants.USAGE_TYPE_KEY]
         error = self.error_previous[constants.USAGE_TYPE_KEY]
+
         ration = self._usage_ratio(usage_space)
         # Scenarios -  More Than Original
         if ration >= self._alert_rule.usage_error and warn == 1:
@@ -103,28 +106,29 @@ class NotificationHandler(object):
             if original < threshold and original < count and previous < count:
                 self._update_normal_original(key, is_warn, count)
                 self._update_normal_previous(key, is_warn, count)
-                self._up_normal_notify(key, is_warn, count)
+                self._update_normal_notify(key, is_warn, count)
                 self._make_notification(key, message_type, level='01')
             # Scenarios - More Than Original
             elif threshold <= original < count and count > previous:
                 self._update_normal_original(key, is_warn, count)
                 self._update_normal_previous(key, is_warn, count)
-                self._up_normal_notify(key, is_warn, new_notify_count(notify_count, count, previous))
+                self._update_normal_notify(key, is_warn, new_notify_count(notify_count, count, previous))
                 self._make_notification(key, message_type, level='02')
             # Scenarios - Now Fix
             elif count < original and count < previous:
                 self._update_normal_previous(key, is_warn, count)
             # Scenarios - More Then Done
             elif previous < count < original:
-                self._update_normal_previous(key, is_warn, count)
                 self._make_notification(key, message_type, level='03')
+                self._update_normal_previous(key, is_warn, count)
+
         else:
             # Scenarios - Done
             if count < original and count < previous:
                 self._update_normal_original(key, is_warn, 0)
                 self._update_normal_previous(key, is_warn, 0)
-                self._up_normal_notify(key, is_warn, 0)
                 self._make_notification(key, message_type, level='04')
+                self._update_normal_notify(key, is_warn, 0)
 
     def _all_counter(self, counters, key):
         """
@@ -161,7 +165,7 @@ class NotificationHandler(object):
         else:
             self.error_original[key] = count
 
-    def _up_normal_notify(self, key, is_warn, count):
+    def _update_normal_notify(self, key, is_warn, count):
         """
         Update notification count
         """
@@ -202,7 +206,12 @@ class NotificationHandler(object):
         if level == '01':
             alert_history = AlertHistory(self._alert_rule.user_id, constants.PENDING, message)
             self._sql.add(alert_history)
-            alert_history.code = '%s1%03d' % (constants.HISTORY_CODE[name_type], alert_history.id)
+            # alert_history.code = '%s1%03d' % (constants.HISTORY_CODE[name_type], alert_history.id)
+            alert_history.level = "2" if message_type == constants.MESSAGE_ERROR_KEY else "3"
+            alert_history.code = '{0}{1}001'.format(
+                constants.HISTORY_CODE[name_type],
+                alert_history.level
+            )
             self._sql.add(alert_history)
 
             if message_type == constants.MESSAGE_WARN_KEY:
@@ -210,11 +219,13 @@ class NotificationHandler(object):
             else:
                 self.error_id[name_type] = alert_history.id
         else:
-            id = self.warn_id[name_type] if message_type == constants.MESSAGE_WARN_KEY else self.error_id[name_type]
+            id = self.warn_id[name_type] if message_type == constants.MESSAGE_WARN_KEY \
+                else self.error_id[name_type]
             query = self._sql.query(AlertHistory, AlertHistory.user_id).filter_by(id=id)
             alert_history = query.first()
-            alert_history.level = constants.HISTORY_LEVEL[level]
             alert_history.event_message = message
+            alert_history.count = self.warn_notify[name_type] if message_type == constants.MESSAGE_WARN_KEY \
+                else self.error_notify[name_type]
             alert_history.tag_resolved() if level == '04' else alert_history.tag_triggered()
             alert_history.status = constants.RESOLVED if level == '04' else constants.PENDING
             self._sql.add(alert_history)

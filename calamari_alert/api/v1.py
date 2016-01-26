@@ -1,5 +1,4 @@
 
-
 class UserMixin(object):
 
     def user_info(self):

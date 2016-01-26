@@ -41,12 +41,6 @@ HISTORY_CODE = {
     USAGE_TYPE_KEY: '04'
 }
 
-HISTORY_LEVEL = {
-    '01': INFO,
-    '02': WARNING,
-    '03': ERROR,
-    '04': CRITICAL
-}
 
 ENGLISH_STATUS_MESSAGE = {
     OSD_TYPE_KEY: {
