@@ -94,9 +94,7 @@ class HTTPClient(requests.Session,
         except KeyError:
             pass
 
-
         resp = None
-
         try:
             resp = self.http.request(
                 method,
