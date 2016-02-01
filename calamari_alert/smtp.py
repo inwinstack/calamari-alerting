@@ -50,8 +50,3 @@ class SMTPClient(object):
             pass
             logs.manager(logs.ERROR, "EMAIL - {0}".format(msg.message))
         return False
-
-
-if __name__ == '__main__':
-    stmp_client = SMTPClient('kairen.bai@k8s.com.tw', 'asd', 'localhost', '25')
-    stmp_client.sent('s1499k005@gmail.com', 'Test')
