@@ -42,6 +42,7 @@ def main():
     try:
         mail_client = SMTPClient(mail_username, mail_password, mail_address, mail_port)
         mail_client.set_mode(config.CONF.email.mode)
+        mail_client.set_auth_account(config.CONF.email.auth_account)
 
         sql_connect = SQLMapper(connection=connection, enable_echo=False)
         sql_connect.sync()

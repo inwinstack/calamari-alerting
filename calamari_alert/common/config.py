@@ -41,6 +41,7 @@ email_opts = [
     cfg.StrOpt('address', default='smtp.gmail.com'),
     cfg.StrOpt('port', default=587),
     cfg.StrOpt('mode', default='None'),
+    cfg.StrOpt('auth_account', default=True),
     cfg.StrOpt('username', default='localhost'),
     cfg.StrOpt('password', default='localhost')
 ]

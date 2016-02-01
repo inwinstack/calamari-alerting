@@ -8,6 +8,8 @@ class SMTPClient(object):
 
     def __init__(self, user, password, domain_name, port):
         self.mode = None
+        self.auth_account = True
+
         self.user = user
         self.password = password
         self.domain_name = domain_name
@@ -15,6 +17,9 @@ class SMTPClient(object):
 
     def set_mode(self, mode):
         self.mode = mode
+
+    def set_auth_account(self, auth_account):
+        self.auth_account = auth_account
 
     def sent(self, to_account, content):
         message = MIMEMultipart()
@@ -29,7 +34,9 @@ class SMTPClient(object):
             if self.mode == 'TLS':
                 mail_server.starttls()
 
-            mail_server.login(self.user, self.password)
+            if self.auth_account:
+                mail_server.login(self.user, self.password)
+
             mail_server.sendmail(self.user, to_account, message.as_string())
             mail_server.close()
             logs.manager(logs.INFO, "EMAIL - Successfully sent email")
@@ -37,7 +44,14 @@ class SMTPClient(object):
         except smtplib.socket.gaierror:
             logs.manager(logs.ERROR, "EMAIL - Couldn't contact the host")
         except smtplib.SMTPAuthenticationError:
+            pass
             logs.manager(logs.ERROR, "EMAIL - Login failed")
         except Exception, msg:
+            pass
             logs.manager(logs.ERROR, "EMAIL - {0}".format(msg.message))
         return False
+
+
+if __name__ == '__main__':
+    stmp_client = SMTPClient('kairen.bai@k8s.com.tw', 'asd', 'localhost', '25')
+    stmp_client.sent('s1499k005@gmail.com', 'Test')
