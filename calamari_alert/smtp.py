@@ -19,7 +19,7 @@ class SMTPClient(object):
         self.mode = mode
 
     def set_auth_account(self, auth_account):
-        self.auth_account = auth_account
+        self.auth_account = (auth_account == 'True')
 
     def sent(self, to_account, content):
         message = MIMEMultipart()
@@ -44,9 +44,7 @@ class SMTPClient(object):
         except smtplib.socket.gaierror:
             logs.manager(logs.ERROR, "EMAIL - Couldn't contact the host")
         except smtplib.SMTPAuthenticationError:
-            pass
             logs.manager(logs.ERROR, "EMAIL - Login failed")
         except Exception, msg:
-            pass
-            logs.manager(logs.ERROR, "EMAIL - {0}".format(msg.message))
+            logs.manager(logs.ERROR, "EMAIL - Sent error message : {0}".format(msg.message))
         return False
