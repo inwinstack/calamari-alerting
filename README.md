@@ -98,6 +98,7 @@ port = 587
 
 # The 'mode' is setting smtp security, Two options 'None' and 'TLS'
 mode = TLS
+auth_account = True
 username = example@gmail.com
 password = example
 ```

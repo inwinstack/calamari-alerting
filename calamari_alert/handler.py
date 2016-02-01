@@ -119,8 +119,8 @@ class NotificationHandler(object):
                 self._update_normal_previous(key, is_warn, count)
             # Scenarios - More Then Done
             elif previous < count < original:
-                self._make_notification(key, message_type, level='03')
                 self._update_normal_previous(key, is_warn, count)
+                self._make_notification(key, message_type, level='03')
 
         else:
             # Scenarios - Done
@@ -206,6 +206,8 @@ class NotificationHandler(object):
         if level == '01':
             alert_history = AlertHistory(self._alert_rule.user_id, constants.PENDING, message)
             self._sql.add(alert_history)
+            alert_history.count = self.warn_notify[name_type] if message_type == constants.MESSAGE_WARN_KEY \
+                else self.error_notify[name_type]
             # alert_history.code = '%s1%03d' % (constants.HISTORY_CODE[name_type], alert_history.id)
             alert_history.level = "2" if message_type == constants.MESSAGE_ERROR_KEY else "3"
             alert_history.code = '{0}{1}001'.format(
